@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="utf-8">
+  <title>Docker Image</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<body>
+  <form action="/add_Image" method="POST">
+    <p>Nombre del deploy <input type="text" name="nombre" size="40"></p>
+    <div>
+      <h1>Datos del Back-end o Front-end</h1>
+      <p>Imagen 
+        <select name="imagen" id="images">
+          {% for image in docker_images %}
+          <option>{{ image }}</option>
+          {% endfor %}
+        </select>
+      </p>
+      <p>Puerto donde corre el servidor <input type="text" name="containerPort" size="40"></p>
+      <p>Puerto para acceder a la aplicación http://master-ip:puerto/ (consultar puertos disponibles)<input type="text" name="nodePort" size="40"></p>
+      <h4>Puertos disponibles para Kubernetes 31000-32767. Puertos usados {{ ports }}</h4>
+      <p>
+          <select name="database" id="basededatos">
+          {% for type in database %}
+          <option>{{ type }}</option>
+          {% endfor %}
+          </select>
+      </p>
+    </div>
+    <div>
+
+    </div>
+
+    <div class="derecha" style="align-self: right"></div>
+  <div id="imprimir"></div>
+  </form>
+<script>
+</script>
+</body>

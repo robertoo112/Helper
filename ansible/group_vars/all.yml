@@ -1,0 +1,10 @@
+
+#Docker
+docker_version: 17.03
+
+#Kubernetes
+kubernetes_version: v1.19.0
+inst_version: 1.19.0
+
+pod_network: 192.168.0.0/16
+token: nx1jjq.u42y27ip3bhmj8vj

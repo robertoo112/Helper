@@ -1,0 +1,46 @@
+---
+- name: Install python
+  hosts: all
+  become: yes
+  roles: 
+    - python
+
+#- name: Setup users
+#  hosts: all
+#  become: yes
+#  roles:
+#    - setup-user
+
+- name: Install docker
+  hosts: all
+  become: yes
+  roles: 
+    - docker
+
+- name: Install kubernetes
+  hosts: all 
+  become: yes
+  roles:
+    - kubernetes/install
+ 
+- name: Create cluster
+  hosts: master
+  become: yes
+  roles:
+    - kubernetes/master
+
+- name: Join nodes
+  hosts: nodes
+  become: yes
+  become_user: root
+  roles:
+    - kubernetes/nodes
+   
+- name: Prepare environment
+  hosts: master
+  roles:
+    - provisional
+  
+ 
+     
+       

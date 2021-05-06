@@ -1,0 +1,96 @@
+---
+# Creating service to connect to master mysql (headless service)
+apiVersion: v1
+kind: Service
+metadata:
+    labels:
+        app: mysql
+    name: mysql-svc
+spec:
+    ports:
+    - port: 3306
+    selector:
+        app: mysql
+    clusterIP: None
+
+---
+#Creating secret for user and passwd
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mysql-password
+type: Opaque
+data:
+  password: YWRtaW4= #echo -n 'admin' | base64
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+---
+#Creating mysql deployment as StatefulSet
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+    name: mysql-deployment
+    labels:
+       app: mysql
+spec:
+    replicas: 1
+    serviceName: mysql-svc
+    selector:
+        matchLabels:
+            app: mysql
+    template:
+        metadata:
+            labels:
+                app: mysql
+        spec:
+            containers:
+            - name: mysql
+              image: trow.kube-public:31000/mysql
+              env:
+                - name: MYSQL_ROOT_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                        name: mysql-password
+                        key: password password
+              ports:
+              - containerPort: 3306
+                name: mysql-port
+              volumeMounts:
+              - name: data-volume-mysql
+                mountPath: /var/lib/mysql
+    volumeClaimTemplates:
+    - metadata:
+        name: data-volume-mysql
+      spec:
+        accessModes: 
+            - ReadWriteOnce
+        resources:
+            requests:
+                storage: 1Gi
+
+
+---
+# Creating Configmap for mysql connection
+apiVersion: v1
+kind: ConfigMap
+metadata:
+    name: mysql-config
+data:
+  mysql_host: mysql-svc

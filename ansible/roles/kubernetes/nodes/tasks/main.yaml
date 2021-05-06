@@ -1,0 +1,9 @@
+- name: Reset Kubernetes component
+  shell: "kubeadm reset --force"
+ 
+- name: Join Kubernetes cluster
+  shell: |
+    kubeadm join --token {{ token }} --discovery-token-unsafe-skip-ca-verification \
+    {{ hostvars["k8s-master"].ansible_ssh_host }}:6443
+  
+

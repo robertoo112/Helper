@@ -1,0 +1,39 @@
+{% extends "base.html" %} {% block title %}Kubernetes Helper{% endblock %}
+{% block content %}
+  <table>
+    <thead>
+      <tr>
+        <td>Services</td>
+        <td>Deploys</td>
+        <td>Persisten Volumes</td>
+        <td>Secrets</td>
+        <td>Config Maps</td>
+      </tr>
+    </thead>
+    <tbody>
+      {% for deploy in kubernetesObjects.get('deploys') %}
+      <tr>
+        <td>{{ kubernetesObjects.get('services')[kubernetesObjects.get('deploys').index(deploy)] }}</td>
+        <td>{{ deploy }}</td>
+        <td>{{ kubernetesObjects.get('persistentVolumes')[kubernetesObjects.get('deploys').index(deploy)] }}</td>
+        <td>{{ kubernetesObjects.get('secrets')[kubernetesObjects.get('deploys').index(deploy)] }}</td>
+        <td>{{ kubernetesObjects.get('configMaps')[kubernetesObjects.get('deploys').index(deploy)] }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <table>
+    <thead>
+      <tr>
+        <td>Docker Images</td>
+      </tr>
+    </thead>
+    <tbody>
+      {% for image in docker_images %}
+      <tr>
+        <td>{{ image }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endblock %}

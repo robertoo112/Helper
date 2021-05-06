@@ -1,0 +1,46 @@
+
+---
+ 
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: deplo3
+    labels:
+        app: deplo3
+        type: polivalente
+spec:
+    replicas: 1
+    selector:
+        matchLabels:
+            app: deplo3
+            type: polivalente
+    template:
+        metadata:
+            labels:
+                app: deplo3
+                type: polivalente
+        spec:
+            containers:
+                - name: deplo3-container
+                  image: trow.kube-public:31000/image2
+                  ports:
+                  - containerPort: 3333
+                    name: deplo3-port
+--- 
+
+apiVersion: v1
+kind: Service
+metadata:
+    labels:
+        app: deplo3
+        
+    name: deplo3-svc-add
+spec:
+    selector:
+        app: deplo3
+        type: polivalente
+    type: NodePort
+    ports:
+        - port: 3333
+          targetPort: 3333
+          nodePort: 31331

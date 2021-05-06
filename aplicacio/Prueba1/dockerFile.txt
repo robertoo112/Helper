@@ -1,0 +1,5 @@
+FROM ubuntuimage
+ADD asdfasdfasdf /opt/source_code
+RUN apt-get install python
+RUN pip install flask 
+CMD python app.py

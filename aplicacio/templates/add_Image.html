@@ -1,0 +1,51 @@
+{% extends "base.html" %} {% block title %}Add Docker image{% endblock %}
+{% block content %} 
+  <form action="/add_Image" method="POST">
+    <p>Nombre de la imagen: <input type="text" name="nombre" size="40"></p>
+    <p>Sistema Operativo
+      <select name="OS">
+      <option>Ubuntu</option>
+      <option>Centos7</option>
+      </select>
+    </p>
+    <p>Link del repositorio de git, sera copiado en /opt/source-code <input type="text" name="git" size="50"> <input type="button" value="Nuevo path" onclick="gitPath();"/> </p>
+    <div id="dynamicCheck">
+      <input type="button" value="Nueva Accion" onclick="createNewElement();"/>
+    </div>
+   
+   <div id="newElementId">Acciones:</div>
+    <p>
+      <input type="submit" value="Enviar">
+      <input type="reset" value="Borrar">
+    </p>
+  </form>
+  <script type="text/JavaScript">
+    let i = 1;
+    let s = false;
+
+    function createNewElement() {
+        // First create a DIV element.
+      var txtNewInputBox = document.createElement('div');
+      //s = "<input type='text' name='default"+i.toString();"'/>
+        // Then add the content (a new input box) of the element.
+      txtNewInputBox.innerHTML = "<input type='text' name='default"+i+"'>";
+    
+        // Finally put it where it is supposed to appear.
+      document.getElementById("newElementId").appendChild(txtNewInputBox);
+      i ++
+    }
+    
+    function gitPath() {
+      // First create a DIV element.
+    if (s == false)
+        var txtNewInputBox = document.createElement('div');
+        //s = "<input type='text' name='default"+i.toString();"'/>
+          // Then add the content (a new input box) of the element.
+        txtNewInputBox.innerHTML = "<p>Path de git:<input type='text' name='path'></p>";
+      
+          // Finally put it where it is supposed to appear.
+        document.getElementById("newElementId").appendChild(txtNewInputBox);
+        s = true;  
+  }
+    </script>
+    {% endblock %}

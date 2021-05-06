@@ -1,0 +1,39 @@
+---
+- name: Copy docker registry
+  copy: 
+     src: './files/docker_registry'
+     dest: /home/vagrant
+
+- name: Change directory mode recursively
+  file:
+     path: /home/vagrant/docker_registry
+     mode: '777'
+     recurse: yes
+
+- name: Execute docker registry
+  shell: ./install.sh 
+  args:
+    chdir: /home/vagrant/docker_registry/trow/quick-install
+
+- name: Copy docker images
+  copy:
+    src: ./files/docker_images
+    dest: /home/vagrant
+
+- name: Load docker images
+  command: "docker image load -i {{ item }}.tar"
+  with_items:
+    - mysql
+    - mongo
+  args:
+    chdir: /home/vagrant/docker_images
+     #- docker image load -i mongo.tar
+    #- docker image load -i mysql.tar
+
+- name: Push docker images to the local repository
+  command: docker push trow.kube-public:31000/{{ item }} #&& docker push trow.kube-public:31000/mongo
+  with_items:
+    - mysql
+    - mongo
+     #- docker push trow.kube-public:31000/mongo
+     #- docker push trow.kube-public:31000/mysql

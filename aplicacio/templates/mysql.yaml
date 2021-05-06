@@ -1,0 +1,106 @@
+---
+# Creating service to connect to master mysql (headless service)
+apiVersion: v1
+kind: Service
+metadata:
+    labels:
+        app: mysql
+    name: mysql-svc
+spec:
+    ports:
+    - port: 3306
+    selector:
+        app: mysql
+    clusterIP: None
+
+---
+#Creating secret for user and passwd
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mysql-user
+type: Opaque
+data:
+  username: cm9vdA== # echo -n 'root' | base64
+  password: YWRtaW4= #echo -n 'admin' | base64
+
+---
+#Creating persistentVolume inside cluster
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: mysql-persistent-storage
+  labels:
+    app: mysql-pvc
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteMany
+  hostPath:
+    path: /tmp/mysql
+
+---
+#PersistentVolumeClaim to claim a persistentVolume
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-persistent-storage
+  labels:
+    app: mysql-pv
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi
+  volumeName: "mysql-persistent-storage"
+---
+#Creating mysql deployment as StatefulSet
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: mysql-deployment
+    labels:
+       app: mysql
+spec:
+    replicas: 1
+    selector:
+        matchLabels:
+            app: mysql
+    template:
+        metadata:
+            labels:
+                app: mysql
+        spec:
+            containers:
+            - name: mysql
+              image: trow.kube-public:31000/mysql
+              env:
+                - name: MYSQL_ROOT_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                        name: mysql-password
+                        key: password
+              ports:
+              - containerPort: 3306
+                name: mysql-port
+              volumeMounts:
+              - name: data-volume-mysql
+                mountPath: /var/lib/mysql
+            volumes:
+            - name: data-volume-mysql
+              persistentVolumeClaim: 
+                claimName: "mysql-persistent-storage"
+
+---
+# Creating Configmap for mysql connection
+apiVersion: v1
+kind: ConfigMap
+metadata:
+    name: mysql-config
+data:
+  hostname: mysql-svc
+  port: 3306

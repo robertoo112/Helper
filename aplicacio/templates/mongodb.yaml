@@ -1,0 +1,110 @@
+---
+# Creating service to connect to master mysql (headless service)
+apiVersion: v1
+kind: Service
+metadata:
+    labels:
+        app: mongo
+    name: mongo-svc
+spec:
+    ports:
+    - port: 27017
+    selector:
+        app: mongo
+    clusterIP: None
+
+---
+#Creating secret for user and passwd
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mongo-user
+type: Opaque
+data:
+  username: 'YWRtaW4=' 
+  password: 'YWRtaW4=' #echo -n 'admin' | base64
+
+---
+#Creating persistentVolume inside cluster
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: mongo-persistent-storage
+  labels:
+    app: mongo-pvc
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteMany
+  hostPath:
+    path: /tmp/mongo
+
+---
+#PersistentVolumeClaim to claim a persistentVolume
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mongo-persistent-storage
+  labels:
+    app: mongo-pv
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi
+  volumeName: "mongo-persistent-storage"
+---
+#Creating mysql deployment as StatefulSet
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: mongo-deployment
+    labels:
+       app: mongo
+spec:
+    replicas: 1
+    selector:
+        matchLabels:
+            app: mongo
+    template:
+        metadata:
+            labels:
+                app: mongo
+        spec:
+            containers:
+            - name: mongo
+              image: trow.kube-public:31000/mongo
+              env:
+                - name: MONGO_INITDB_ROOT_USERNAME
+                  valueFrom:
+                    secretKeyRef:
+                        name: mongo-username
+                        key: username
+                - name: MONGO_INITDB_ROOT_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                        name: mongo-username
+                        key: password
+              ports:
+              - containerPort: 27017
+                name: mongo-port
+              volumeMounts:
+              - name: data-volume-mongo
+                mountPath: /var/lib/mongo
+            volumes:
+            - name: data-volume-mongo
+              persistentVolumeClaim: 
+                claimName: "mongo-persistent-storage"
+
+---
+# Creating Configmap for mysql connection
+apiVersion: v1
+kind: ConfigMap
+metadata:
+    name: mongo-config
+data:
+  hostname: mongo-svc

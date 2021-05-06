@@ -1,0 +1,53 @@
+---
+
+- name: Resetting kubeadm
+  shell: kubeadm reset -f
+
+- name: Init kubernetes cluster
+  shell: kubeadm init --pod-network-cidr {{ pod_network }} \
+           --service-cidr=10.244.0.0/12 --ignore-preflight-errors=cri \
+           --apiserver-advertise-address={{ hostvars[groups['master'][0]].ansible_ssh_host }} \
+           --kubernetes-version {{kubernetes_version}} --token {{ token }}
+
+- name: Create kubernetes configuration directory
+  file:
+    path: /home/vagrant/.kube
+    state: directory
+    mode: '0755'
+    recurse: yes
+
+- name: Copy kubernetes configuration
+  copy:
+    src: /etc/kubernetes/admin.conf
+    dest: /home/vagrant/.kube/config
+    mode: 0755
+    remote_src: true
+
+- name: kubernetes configuration
+  command: chown vagrant:vagrant /home/vagrant/.kube/config
+
+- name: Get kubernetes dashboard modified with node port
+  template: 
+    src: 'calico.yaml.j2'
+    dest: calico.yaml
+
+- name: Get kubernetes dashboard modified with node port
+  template: 
+    src: 'dashboard.yaml.j2'
+    dest: kubernetes-dashboard.yaml
+
+- name: Deploy a Kubernetes Pod network using CNI 
+  become: false
+  command: kubectl create -f https://docs.projectcalico.org/archive/v3.13/manifests/calico.yaml
+
+- name: Deploy Kubernetes dashboard
+  become: false
+  shell: kubectl apply -f kubernetes-dashboard.yaml
+
+- name: Install bash autocompletion
+  apt:
+    name: bash-completion
+    state: present
+
+- name: Enable kubectl autocompletion
+  command: bash -c 'echo "source <(kubectl completion bash)" >> /etc/bashrc'

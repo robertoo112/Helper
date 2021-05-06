@@ -1,0 +1,62 @@
+
+---
+ 
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: deploy1
+    labels:
+        app: deploy1
+        type: polivalente
+spec:
+    replicas: 1
+    selector:
+        matchLabels:
+            app: deploy1
+            type: polivalente
+    template:
+        metadata:
+            labels:
+                app: deploy1
+                type: polivalente
+        spec:
+            containers:
+                - name: deploy1-container
+                  image: trow.kube-public:31000/iamge1
+                  ports:
+                  - containerPort: 3333
+                    name: deploy1-port
+                  env:
+                    - name: v1
+                      valueFrom:
+                        configMapKeyRef:
+                            name: mongo-config
+                            key: hostname
+                    - name: v2
+                      valueFrom:
+                        secretKeyRef:
+                            name: mongo-user
+                            key: username
+                    - name: v3
+                      valueFrom:
+                        secretKeyRef:
+                            name: mongo-user
+                            key: password
+--- 
+
+apiVersion: v1
+kind: Service
+metadata:
+    labels:
+        app: deploy1
+        
+    name: deploy1-svc-add
+spec:
+    selector:
+        app: deploy1
+        type: polivalente
+    type: NodePort
+    ports:
+        - port: 3333
+          targetPort: 3333
+          nodePort: 31331

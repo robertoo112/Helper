@@ -1,0 +1,143 @@
+{% extends "base.html" %} {% block title %}Create Deploy{% endblock %}
+<!-- <!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="utf-8">
+  <title>Docker Image</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<body> -->
+  {% block content %} 
+  <form action="/create_deploy" method="POST">
+    <p>Nombre del deploy <input type="text" name="name" size="40"></p>
+    <p>
+        <select name="deploy" id="typedeploy">
+            <option value = "0">Selecciona una opcion y actualiza</option>
+            <option value = "1">Back-end o Front-end con servicio externo y BBDD</option>
+            <option value = "2">Front con servicio externo, enlazado con Back-end con BDD</option>
+            <option value = "3">Back-end o Front-end con servicio externo</option>
+        </select>
+        <input type="button" value="Actualizar" onclick="actualizar();"/>
+    </p>
+  <div id="imprimir"></div>
+  <p>
+    <input type="submit" value="Enviar">
+    <input type="reset" value="Borrar">
+  </p>
+  </form>
+  <script type="text/JavaScript">
+    function actualizar() {
+        var somePorts = '{{ ports }}';
+        var a = document.getElementById('typedeploy');
+        var imp = document.getElementById('imprimir');
+        if (a.value == 1){
+            imp.innerHTML = "<div>\n" +
+               "               <h1>Datos del Back-end o Front-end</h1>\n" +
+               "               <p>Imagen \n" +
+               "                 <select name=\"docker\" type=\"text\" id=\"typedeploy\">\n" +
+               "                   {% for image in docker_images %}\n" +
+               "                   <option>{{ image }}</option>\n" +
+               "                   {% endfor %}\n" +
+               "                 </select>\n" +
+               "               </p>\n" +
+               "               <p>Puerto para acceder al servidor de la imagen <input type=\"text\" name=\"containerPort\" size=\"20\"></p>\n" +
+               "               <p>Puerto para acceder a la aplicación desde una url http://master-ip:puerto/ (consultar puertos disponibles)<input type=\"text\" name=\"nodePort\" size=\"20\"></p>\n" +
+               "               <aside>\n" +
+               "                <h4>Puertos disponibles para Kubernetes 31000-32767. Puertos usados {{ ports }}</h4>\n" +
+               "               </aside>" +
+               "                <p> Selecciona la base de datos disponibles en el sistema\n"+
+               "                   <select name=\"database\" type=\"text\" id=\"basededatos\">\n"+
+               "                      {% for key, value in databases.items() %}\n"+
+               "                      <option>{{ key }}</option>\n"+
+               "                      {% endfor %}\n"+
+               "                   </select>\n"+
+               "                </p>\n"+
+               "               <h4>Nombre de las Variables de entorno para acceder a la base de datos</h4>\n" +
+               "               <p>Variable para hacer referencia al Hostname de la BBDD<input type=\"text\" name=\"hostname-service\" size=\"20\"></p>\n" +
+               "               <p>Variable para hacer referencia al Usuario root <input type=\"text\" name=\"user\" size=\"20\"></p>\n" +
+               "               <p>Variable para hacer referencia al Password <input type=\"text\" name=\"password\" size=\"20\"></p>\n" +
+               "             </div>\n ";
+               
+         }
+         if (a.value == 2){
+            imp.innerHTML = "<div>\n" +
+              "               <h3>Datos del Front-end</h3>\n" +
+              "               <p>Imagen para el Front-end\n" +
+              "                 <select name=\"docker-front\" type=\"text\" id=\"typedeploy\">\n" +
+              "                   {% for image in docker_images %}\n" +
+              "                   <option>{{ image }}</option>\n" +
+              "                   {% endfor %}\n" +
+              "                 </select>\n" +
+              "               </p>\n" +
+              "               <p>Puerto para acceder al servidor de la imagen <input type=\"text\" name=\"containerPort\" size=\"20\"></p>\n" +
+              "               <p>Puerto para acceder a la aplicación desde una url http://master-ip:puerto/ (consultar puertos disponibles)<input type=\"text\" name=\"nodePort\" size=\"20\"></p>\n" +
+              "               <h5>Puertos disponibles para Kubernetes 31000-32767. Puertos usados {{ ports }}</h5>\n" +
+              "               <h5>Nombre de las Variables de entorno para acceder Back-end</h5>\n" +
+              "               <p>Variable para hacer referencia al Hostname del servidor Back-end<input type=\"text\" name=\"hostname-service-back\" size=\"20\"></p>\n" +
+              "               <p>Variable para el puerto del Back-end(este puerto se usará para acceder a la imagen del Back-end)<input type=\"text\" name=\"port-back\" size=\"20\"></p>\n" +
+              "               <h3>Datos del Back-end</h3>\n" +
+              "               <p>Imagen para el Back-end \n" +
+              "                 <select name=\"docker-back\" type=\"text\" id=\"typedeploy\">\n" +
+              "                   {% for image in docker_images %}\n" +
+              "                   <option>{{ image }}</option>\n" +
+              "                   {% endfor %}\n" +
+              "                 </select>\n" +
+              "                <p> Selecciona la base de datos disponibles en el sistema\n"+
+              "                   <select name=\"database\" type=\"text\" id=\"basededatos\">\n"+
+              "                      {% for key, value in databases.items() %}\n"+
+              "                      <option>{{ key }}</option>\n"+
+              "                      {% endfor %}\n"+
+              "                   </select>\n"+
+              "                </p>\n"+
+              "               </p>\n" +
+              "               <h5>Nombre de las Variables de entorno para acceder a la base de datos</h5>\n" +
+              "               <p>Variable para hacer referencia al Hostname de la BBDD<input type=\"text\" name=\"hostname-service\" size=\"20\"></p>\n" +
+              "               <p>Variable para hacer referencia al Usuario root <input type=\"text\" name=\"user\" size=\"20\"></p>\n" +
+              "               <p>Variable para hacer referencia al Password <input type=\"text\" name=\"password\" size=\"20\"></p>\n" +
+              "             </div>\n ";
+        }
+         if (a.value == 3){
+            imp.innerHTML ="<div>\n" +
+              "               <h1>Datos del Back-end o Front-end</h1>\n" +
+              "               <p>Imagen \n" +
+              "                 <select name=\"docker\" type=\"text\" id=\"typedeploy\">\n" +
+              "                   {% for image in docker_images %}\n" +
+              "                   <option>{{ image }}</option>\n" +
+              "                   {% endfor %}\n" +
+              "                 </select>\n" +
+              "               </p>\n" +
+              "               <p>Puerto para acceder al servidor de la imagen <input type=\"text\" name=\"containerPort\" size=\"20\"></p>\n" +
+              "               <p>Puerto para acceder a la aplicación desde una url http://master-ip:puerto/ (consultar puertos disponibles)<input type=\"text\" name=\"nodePort\" size=\"20\"></p>\n" +
+              "               <aside>\n" +
+              "                <h4>Puertos disponibles para Kubernetes 31000-32767. Puertos usados {{ ports }}</h4>\n" +
+              "               </aside>\n" +
+              "             </div>\n ";
+         }
+    }
+
+  </script>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+    {% if category == 'error' %}
+    <div class="alert alert-danger alert-dismissable fade show" role=alert>
+      {{ message }}
+      <button type="button" class="close" data-dismiss="alert">
+        <span aria-hidden="true">&times;</span>
+      </button>
+    </div>
+    {% else %}
+    <div class="alert alert-danger alert-dismissable fade show" role=alert>
+      {{ message }}
+      <button type="button" class="close" data-dismiss="alert">
+        <span aria-hidden="true">&times;</span>
+      </button>
+    </div>
+    {% endif %}
+    {% endfor %}
+  {% endif %}
+  {% endwith %}
+  {% endblock %}
+</body>

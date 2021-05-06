@@ -1,0 +1,92 @@
+
+<!--{% with messages = get_flashed_messages() %}
+{% if messages %}
+{% for message in messages %}
+  <p>{{ message }}</p>
+{% endfor %}
+{% endif %}
+{% endwith %}-->
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="utf-8">
+  <title>Docker Image</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<body>
+  <form action="/add_Image" method="POST">
+    <p>Nombre de la imagen: <input type="text" name="nombre" size="40"></p>
+    <p>Sistema Operativo
+      <select name="OS">
+      <option>Ubuntu</option>
+      <option>Centos7</option>
+      </select>
+    </p>
+    <p>Link del repositorio de git, sera copiado en /opt/source-code <input type="text" name="git" size="50"> <input type="button" value="Nuevo path" onclick="gitPath();"/> </p>
+    <div id="dynamicCheck">
+      <input type="button" value="Nueva Accion" onclick="createNewElement();"/>
+    </div>
+   
+   <div id="newElementId">Acciones:</div>
+    <p>
+      <input type="submit" value="Enviar">
+      <input type="reset" value="Borrar">
+    </p>
+  </form>
+  <table>
+    <thead>
+      <tr>
+        <td>Services</td>
+        <td>Deploys</td>
+        <td>Persisten Volumes</td>
+        <td>Secrets</td>
+        <td>Config Maps</td>
+      </tr>
+    </thead>
+    <tbody>
+      {% for deploy in kubernetesObjects.get('deploys') %}
+      <tr>
+        <td>{{ kubernetesObjects.get('services')[kubernetesObjects.get('deploys').index(deploy)] }}</td>
+        <td>{{ deploy }}</td>
+        <td>{{ kubernetesObjects.get('persistentVolumes')[kubernetesObjects.get('deploys').index(deploy)] }}</td>
+        <td>{{ kubernetesObjects.get('secrets')[kubernetesObjects.get('deploys').index(deploy)] }}</td>
+        <td>{{ kubernetesObjects.get('configMaps')[kubernetesObjects.get('deploys').index(deploy)] }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <script type="text/JavaScript">
+    let i = 1;
+    let s = false;
+
+    function createNewElement() {
+        // First create a DIV element.
+      var txtNewInputBox = document.createElement('div');
+      //s = "<input type='text' name='default"+i.toString();"'/>
+        // Then add the content (a new input box) of the element.
+      txtNewInputBox.innerHTML = "<input type='text' name='default"+i+"'>";
+    
+        // Finally put it where it is supposed to appear.
+      document.getElementById("newElementId").appendChild(txtNewInputBox);
+      i ++
+    }
+    
+    function gitPath() {
+      // First create a DIV element.
+    if (s == false)
+        var txtNewInputBox = document.createElement('div');
+        //s = "<input type='text' name='default"+i.toString();"'/>
+          // Then add the content (a new input box) of the element.
+        txtNewInputBox.innerHTML = "<p>Path de git:<input type='text' name='path'></p>";
+      
+          // Finally put it where it is supposed to appear.
+        document.getElementById("newElementId").appendChild(txtNewInputBox);
+        s = true;  
+  }
+    </script>
+</body>
+
+
+</html>

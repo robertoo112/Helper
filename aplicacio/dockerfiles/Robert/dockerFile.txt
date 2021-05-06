@@ -1,0 +1,6 @@
+FROM centosimage
+ADD sdfasdfasdf /opt/source_code
+RUN apt-get install python
+RUN apt-get install python
+RUN pip install flask
+CMD python /aquimismo
