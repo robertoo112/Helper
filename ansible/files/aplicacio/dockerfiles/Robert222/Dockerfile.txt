@@ -1,0 +1,2 @@
+FROM trow.kube-public:31000/tomcat
+ADD sdfasdfasdf /usr/local/tomcat/webapps/

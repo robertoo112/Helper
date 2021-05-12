@@ -76,7 +76,6 @@
               "               <h5>Puertos disponibles para Kubernetes 31000-32767. Puertos usados {{ ports }}</h5>\n" +
               "               <h5>Nombre de las Variables de entorno para acceder Back-end</h5>\n" +
               "               <p>Variable para hacer referencia al Hostname del servidor Back-end<input type=\"text\" name=\"hostname-service-back\" size=\"20\"></p>\n" +
-              "               <p>Variable para el puerto del Back-end(este puerto se usará para acceder a la imagen del Back-end)<input type=\"text\" name=\"port-back\" size=\"20\"></p>\n" +
               "               <h3>Datos del Back-end</h3>\n" +
               "               <p>Imagen para el Back-end \n" +
               "                 <select name=\"docker-back\" type=\"text\" id=\"typedeploy\">\n" +
@@ -84,6 +83,7 @@
               "                   <option>{{ image }}</option>\n" +
               "                   {% endfor %}\n" +
               "                 </select>\n" +
+              "               <p>Puerto del Back-end(este puerto se usará para acceder a la imagen del Back-end)<input type=\"text\" name=\"port-back\" size=\"20\"></p>\n" +
               "                <p> Selecciona la base de datos disponibles en el sistema\n"+
               "                   <select name=\"database\" type=\"text\" id=\"basededatos\">\n"+
               "                      {% for key, value in databases.items() %}\n"+
@@ -119,7 +119,7 @@
 
   </script>
   {% with messages = get_flashed_messages(with_categories=true) %}
-  {% if messages %}
+  <!-- {% if messages %}
     {% for category, message in messages %}
     {% if category == 'error' %}
     <div class="alert alert-danger alert-dismissable fade show" role=alert>
@@ -138,6 +138,6 @@
     {% endif %}
     {% endfor %}
   {% endif %}
-  {% endwith %}
+  {% endwith %} -->
   {% endblock %}
 </body>

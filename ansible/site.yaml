@@ -40,6 +40,15 @@
   hosts: master
   roles:
     - provisional
+  tags:
+    - provisional
+  
+- name: Deploy app
+  hosts: master
+  roles:
+    - setup-app
+  tags:
+    - app
   
  
      

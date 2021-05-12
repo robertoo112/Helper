@@ -2,10 +2,11 @@
 {% block content %} 
   <form action="/add_Image" method="POST">
     <p>Nombre de la imagen: <input type="text" name="nombre" size="40"></p>
-    <p>Sistema Operativo
+    <p>Sistema Operativo o Imagen 
       <select name="OS">
-      <option>Ubuntu</option>
-      <option>Centos7</option>
+        {% for image in images %}
+        <option>{{ image }}</option>
+        {% endfor %}
       </select>
     </p>
     <p>Link del repositorio de git, sera copiado en /opt/source-code <input type="text" name="git" size="50"> <input type="button" value="Nuevo path" onclick="gitPath();"/> </p>

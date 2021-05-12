@@ -4,6 +4,7 @@
     name:
       - python3
       - python
+      - python3-venv
     state: present 
     update_cache: yes
 

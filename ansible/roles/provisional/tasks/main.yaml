@@ -1,8 +1,14 @@
 ---
+- name: Check docker registry installed
+  stat:
+    path: /home/vagrant/docker_registry
+  register: docker_registry
+
 - name: Copy docker registry
   copy: 
      src: './files/docker_registry'
      dest: /home/vagrant
+  when: 'not docker_registry.stat.exists'
 
 - name: Change directory mode recursively
   file:
@@ -15,16 +21,28 @@
   args:
     chdir: /home/vagrant/docker_registry/trow/quick-install
 
+- name: Check docker images 
+  stat:
+    path: /home/vagrant/docker_images
+  register: docker_images
+
 - name: Copy docker images
   copy:
     src: ./files/docker_images
     dest: /home/vagrant
+  when: 'not docker_images.stat.exists'
 
 - name: Load docker images
   command: "docker image load -i {{ item }}.tar"
+  remote_user: vagrant
+  become: true
   with_items:
     - mysql
     - mongo
+    - ubuntu
+    - centos
+    - httpd
+    - tomcat
   args:
     chdir: /home/vagrant/docker_images
      #- docker image load -i mongo.tar
@@ -32,8 +50,20 @@
 
 - name: Push docker images to the local repository
   command: docker push trow.kube-public:31000/{{ item }} #&& docker push trow.kube-public:31000/mongo
+  remote_user: vagrant
+  become: true
   with_items:
     - mysql
     - mongo
+    - ubuntu
+    - centos
+    - httpd
+    - tomcat
      #- docker push trow.kube-public:31000/mongo
      #- docker push trow.kube-public:31000/mysql
+
+- name: Install git
+  become: true
+  apt:
+    name: git
+    state: latest

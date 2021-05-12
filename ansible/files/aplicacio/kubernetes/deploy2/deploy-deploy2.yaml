@@ -1,0 +1,106 @@
+
+---
+ 
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: deploy2-front
+    labels:
+        app: deploy2
+        type: front
+spec:
+    replicas: 1
+    selector:
+        matchLabels:
+            app: deploy2
+            type: front
+    template:
+        metadata:
+            labels:
+                app: deploy2
+                type: front
+        spec:
+            containers:
+                - name: deploy2-container
+                  image: trow.kube-public:31000/iamge1
+                  ports:
+                  - containerPort: puerto-front
+                    name: deploy2-port
+--- 
+
+apiVersion: v1
+kind: Service
+metadata:
+    labels:
+        app: deploy2
+        
+    name: deploy2-front-svc-add
+spec:
+    selector:
+        app: deploy2
+        type: front
+    type: NodePort
+    ports:
+        - port: puerto-front
+          targetPort: puerto-front
+          nodePort: 31331
+---
+ 
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: deploy2-back
+    labels:
+        app: deploy2
+        type: back
+spec:
+    replicas: 1
+    selector:
+        matchLabels:
+            app: deploy2
+            type: back
+    template:
+        metadata:
+            labels:
+                app: deploy2
+                type: back
+        spec:
+            containers:
+                - name: deploy2-container
+                  image: trow.kube-public:31000/iamge1
+                  ports:
+                  - containerPort: puerto-backend
+                    name: deploy2-port
+                  env:
+                    - name: v1
+                      valueFrom:
+                        configMapKeyRef:
+                            name: mongo-config
+                            key: hostname
+                    - name: v2
+                      valueFrom:
+                        secretKeyRef:
+                            name: mongo-user
+                            key: username
+                    - name: v3
+                      valueFrom:
+                        secretKeyRef:
+                            name: mongo-user
+                            key: password
+--- 
+
+apiVersion: v1
+kind: Service
+metadata:
+    labels:
+        app: deploy2
+        
+    name: deploy2-back-svc-add
+spec:
+    selector:
+        app: deploy2
+        type: back
+    type: ClusterIP
+    ports:
+        - port: puerto-backend
+          targetPort: puerto-backend

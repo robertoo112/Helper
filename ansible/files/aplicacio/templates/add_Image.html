@@ -1,0 +1,86 @@
+{% extends "base.html" %} {% block title %}Add Docker image{% endblock %}
+{% block content %} 
+  <form action="/add_Image" method="POST">
+    <p>Nombre de la imagen: <input type="text" name="nombre" size="40"></p>
+    <p>Imagen Base 
+      <select name="OS" id="typeOS">
+        {% for image in images %}
+        <option value = {{ image }}>{{ image }}</option>
+        {% endfor %}
+      </select>
+      <input type="button" value="Actualizar" onclick="nuevoForm();"/>
+    </p>
+    <div id="imprimir"></div>
+  </form>
+  <script type="text/JavaScript">
+    let i = 1;
+    let s = false;
+
+    function nuevoForm() {
+      i = 1;
+      s = false;
+      var a = document.getElementById('typeOS');
+      var imp = document.getElementById('imprimir');
+      if (a.value == "Apache"){
+        imp.innerHTML = 
+        "    <p>Link del repositorio de git(codigo HTML, CSS y JavaScript), será copiado en /usr/local/apache2/htdocs/ <input type=\"text\" name=\"git\" size=\"50\"></p>\n" +
+        "    <p>Link del repositorio de git(Configuración del servidor OPCIONAL, puerto por defecto 80), será copiado en /usr/local/apache2/conf/httpd.conf <input type=\"text\" name=\"git_conf\" size=\"50\"></p>\n" +
+        "   \n" +
+        "   <div id=\"newElementId\">Acciones(https://hub.docker.com/_/httpd documentación para implementar SSL/HTTPS):</div>\n" +
+        "    <p>\n" +
+        "      <input type=\"submit\" value=\"Enviar\">\n" +
+        "      <input type=\"reset\" value=\"Borrar\">\n" +
+        "    </p>";
+      } else if (a.value == "Tomcat"){
+        imp.innerHTML = 
+        "    <p>Link del repositorio de git del .war, será copiado en  /usr/local/tomcat/webapps/ <input type=\"text\" name=\"git\" size=\"50\"></p>\n" +
+        "    <div id=\"dynamicCheck\">\n" +
+        "      <input type=\"button\" value=\"Nueva Accion\" onclick=\"createNewElement();\"/>\n" +
+        "    </div>\n" +
+        "   \n" +
+        "   <div id=\"newElementId\">Acciones (https://hub.docker.com/_/tomcat documentación de la imagen):</div>\n" +
+        "    <p>\n" +
+        "      <input type=\"submit\" value=\"Enviar\">\n" +
+        "      <input type=\"reset\" value=\"Borrar\">\n" +
+        "    </p>";
+      } else {
+        imp.innerHTML = 
+        "    <p>Link del repositorio de git, será copiado en /opt/source-code <input type=\"text\" name=\"git\" size=\"50\"> <input type=\"button\" value=\"Nuevo path\" onclick=\"gitPath();\"/> </p>\n" +
+        "    <div id=\"dynamicCheck\">\n" +
+        "      <input type=\"button\" value=\"Nueva Accion\" onclick=\"createNewElement();\"/>\n" +
+        "    </div>\n" +
+        "   \n" +
+        "   <div id=\"newElementId\">Acciones:</div>\n" +
+        "    <p>\n" +
+        "      <input type=\"submit\" value=\"Enviar\">\n" +
+        "      <input type=\"reset\" value=\"Borrar\">\n" +
+        "    </p>";
+      } 
+    }
+
+    function createNewElement() {
+        // First create a DIV element.
+      var txtNewInputBox = document.createElement('div');
+      //s = "<input type='text' name='default"+i.toString();"'/>
+        // Then add the content (a new input box) of the element.
+      txtNewInputBox.innerHTML = "<input type='text' name='default"+i+"'>";
+    
+        // Finally put it where it is supposed to appear.
+      document.getElementById("newElementId").appendChild(txtNewInputBox);
+      i ++
+    }
+    
+    function gitPath() {
+      // First create a DIV element.
+    if (s == false)
+        var txtNewInputBox = document.createElement('div');
+        //s = "<input type='text' name='default"+i.toString();"'/>
+          // Then add the content (a new input box) of the element.
+        txtNewInputBox.innerHTML = "<p>Path de git:<input type='text' name='path'></p>";
+      
+          // Finally put it where it is supposed to appear.
+        document.getElementById("newElementId").appendChild(txtNewInputBox);
+        s = true;  
+  }
+    </script>
+    {% endblock %}

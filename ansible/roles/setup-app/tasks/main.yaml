@@ -1,0 +1,46 @@
+---
+- name: Install setuptools
+  apt:
+    name: 
+     - python-setuptools
+     - python-pkg-resources
+    state: latest
+  become: yes
+
+- name: Create flask directory
+  file:
+    path: /home/vagrant/flask_app
+    state: directory
+    mode: '777'
+    recurse: yes
+
+- name: Install virtualenv module
+  pip: 
+    name: virtualenv
+    state: latest
+    executable: pip3
+  become: yes
+  become_user: root
+    
+- name: Install python requirements for the app
+  pip:
+    virtualenv: /home/vagrant/flask_app/venv
+    name: Flask
+    state: latest
+  
+- name: Check aplication folder
+  stat:
+    path: ./files/docker_registry
+  register: app
+
+- name: Copy docker registry
+  copy: 
+     src: './files/aplicacio'
+     dest: /home/vagrant/flask_app
+  when: 'not app.stat.exists'
+
+- name: Execute app
+  pip: 
+    virtualenv: /home/vagrant/flask_app/venv
+    name: /home/vagrant/flask_app/aplicacio
+    extra_args: '-e'

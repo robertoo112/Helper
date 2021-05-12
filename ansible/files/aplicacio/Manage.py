@@ -1,25 +1,28 @@
 import json
 import os
+import time
 
 
 class Manage:
     def __init__(self, x):
         self.x = x
-        self.OS = {'Ubuntu': 'ubuntuimage', 'Centos7':'centosimage'}
+        self.OS = {'Ubuntu': 'ubuntu', 'Centos7':'centos', 'Apache': 'httpd', 'Tomcat': 'tomcat'}
         self.unix_commands = {"cp": "ADD","pip": "RUN", "pip3": "RUN", "chmod": "RUN", "apt-get": "RUN",
         "apt": "RUN", "yum": "RUN", "dnf": "RUN", "python": "CMD", "wget": "RUN", "curl": "RUN", "chown": "RUN",
         "chgrp":"RUN", "cd": "WORKDIR", "tar": "RUN", "rm": "RUN", "echo": "RUN", "set": "RUN"}
-        self.databases = {'MongoDB':{'deployed': False, 'configMap': 'mongo-config', 'secret':'mongo-user' }, 'MySQL' :{'deployed': False, 'configMap': 'mysql-config', 'secret':'mysql-user' }}
+        self.databases = {'MongoDB':{'deployed': False, 'configMap': 'mongo-config', 'secret':'mongo-user', 'external': False, 'nodePort':'30017', 'user': 'admin', 'password': 'admin'},
+                          'MySQL' :{'deployed': False, 'configMap': 'mysql-config', 'secret':'mysql-user', 'external': False, 'nodePort':'30036', 'user': 'root', 'password': 'admin'  }}
         self.servers = ['apache', 'apache-tomcat']
         self.docker_registry = "trow.kube-public:31000/"
         self.deploys = ['asdas','fasdfasd','fasdfa', 'Robert']
+        self.deploy = [{'App': 'nombre','deployments':['deploy1-back','deploy1-front'],'services':['svc-back','svc-front']}]
         self.services = ['asdas','fasdfasd','fasdfa']
         self.persistentVolumes = []
         self.pvClaims = ['asdas','fasdfasd','fasdfa']
         self.secrets = [] 
         self.configMaps = ['asdas','fasdfasd','fasdfa']
         self.kubernetesObjects = {'services': self.services,'deploys': self.deploys,'persistentVolumes': self.persistentVolumes,'secrets': self.secrets,'configMaps': self.configMaps }
-        self.docker_images = {'iamge1','image2'}
+        self.docker_images = ['iamge1','image2']
         self.deploy_options = {'Back-end o Front-end con servicio externo y BBDD', 'Front con servicio externo, enlazado con Back-end con BDD', 'Back-end o Front-end con servicio externo'}
         self.used_ports = ['31000','32000']
 
@@ -33,10 +36,17 @@ class Manage:
         return""
 
 
-    def push_image(self, dockerFile, image_name):
+    def push_image(self, dockerFile, image_name, url):
         os.mkdir("./dockerfiles/"+image_name)
-        file = open("./dockerfiles/"+image_name+"/dockerFile.txt", "a")
+        file = open("./dockerfiles/"+image_name+"/Dockerfile", "a")
         file.write(dockerFile)
+        file.close()
+        os.system("git clone "+url+" ./dockerfiles/"+image_name+"/gitrepo")
+        time.sleep(4)
+        os.system("docker build ./dockerfiles/"+image_name+"/ -t "+self.docker_registry+image_name)
+        time.sleep(4)
+        os.system("docker push "+self.docker_registry+image_name)
+        self.docker_images.append(image_name)
         return ""
 
     def add_command(self, command):
@@ -55,13 +65,16 @@ class Manage:
         image_name = ""
         os_image = ""
         dockerFile = ""
+        url = ""
         for key, value in dict.items():
             print(key)
             if key == "OS":
                 os_image = self.OS[value]
-                dockerFile += "FROM "+os_image
+                dockerFile += "FROM "+self.docker_registry+os_image
             elif (key == "nombre"):
                 image_name = value
+            elif key == "url":
+                url = value
             else:
                 print(value)
                 action = self.add_command(value)
@@ -69,32 +82,59 @@ class Manage:
                     return "error"
                 dockerFile += "\n"+action
                 print(value + "esto es lo que pido")
-        self.push_image(dockerFile, image_name)
+        
+        if dict.get('OS') == "Tomcat":
+            dockerFile+= "\nCMD [“catalina.sh”, “run”]"
+        self.push_image(dockerFile, image_name, url)
         return dockerFile
 
     def kubernetes_deploy(self, args):
         yaml = ""
+        deploy = {}
         print(args)
         deployType = args.get('deploy')
         print(deployType)
+        database = self.databases.get(args.get('database'))
+        if database != None and self.databases.get(args.get('database')).get('deployed') == False:
+            self.deploy_database(database)
+        name = args.get('name')
         if deployType == '1' or deployType == '3': 
-            name = args.get('name')
             nodePort = args.get('nodePort')
             image = args.get('docker')
             containerPort = args.get('containerPort')
             tier = 'polivalente'
             print(args.get('database'))
-            database = self.databases.get(args.get('database'))
             vHostname = args.get('hostname-service')
             vUser = args.get('user')
             vPassword = args.get('password')
-            yaml += self.create_deployment(tier, name, containerPort, image, database, vHostname, vUser, vPassword)
-            yaml += self.create_service(name, nodePort, tier, "", containerPort)
+            yaml += self.create_deployment(tier, name, name, containerPort, image, database, vHostname, vUser, vPassword)
+            yaml += self.create_service(name, name, nodePort, tier, "", containerPort)
+
             self.deploy_yaml( yaml, name)
+            #self.deploy
+            self.used_ports.append(nodePort)
         else:
-            yaml += self.create_deployment(tier, name, containerPort, image, database, vHostname, vUser, vPassword)
-            yaml += self.create_service(name, nodePort, tier, "", containerPort)
+            """front"""
+            name_front = args.get('name')+"-front"
+            image_front = args.get('docker-front')
+            containerPort_front = args.get('containerPort')
+            nodePort = args.get('nodePort')
+            vHostname_back = args.get('hostname-service-back')
+            tier = 'front'
+            yaml += self.create_deployment(tier, name, name_front, containerPort_front, image_front, None, vHostname_back, "vUser", "vPassword")
+            yaml += self.create_service(name, name_front, nodePort, tier, "port", containerPort_front)
+            """back"""
+            tier = 'back'
+            name_back = args.get('name')+"-back"
+            image_back = args.get('docker-back')
+            containerPort_back = args.get('port-back')
+            vHostname = args.get('hostname-service')
+            vUser = args.get('user')
+            vPassword = args.get('password')
+            yaml += self.create_deployment(tier, name, name_back, containerPort_back, image_back, database, vHostname, vUser, vPassword)
+            yaml += self.create_service(name, name_back, "", tier, containerPort_back, containerPort_back)
             self.deploy_yaml( yaml, name)
+            self.used_ports.append(nodePort)
         return ""
     
     def deploy_yaml(self, yaml, yaml_name):
@@ -102,13 +142,40 @@ class Manage:
             os.mkdir("./kubernetes/"+yaml_name)
         file = open("./kubernetes/"+yaml_name+"/deploy-"+yaml_name+".yaml", "a")
         file.write(yaml)
+        file.close()
+        os.system("kubectl create -f ./kubernetes/"+yaml_name+"/deploy-"+yaml_name+".yaml")
+    
+    def mysql_external(self):
+        if self.databases.get("MySQL").get("deployed") == False: 
+            return "MySQL no esta activa"
+        elif self.databases.get("MySQL").get("external") == True:
+            return "MySQL visible en el puerto "+self.databases.get("MySQL").get("nodePort")+" con usuario root y contraseña"+ self.databases.get("MySQL").get("password")           
+        else:
+            os.system("kubectl create -f ./templates/nodeport-mysql.yaml")
+            return "MySQL visible en el puerto "+self.databases.get("MySQL").get("nodePort")+" con usuario root y contraseña"+ self.databases.get("MySQL").get("password")
+
+    def mongo_external(self):
+        if self.databases.get("MongoDB").get("deployed") == False: 
+            return "MongoDB no esta activa"
+        elif self.databases.get("MongoDB").get("external") == True:
+            return "MongoDB visible en el puerto "+self.databases.get("MongoDB").get("nodePort")+" con usuario admin y contraseña"+ self.databases.get("MongoDB").get("password")           
+        else:
+            os.system("kubectl create -f ./templates/nodeport-mongo.yaml")
+            return "MongoDB visible en el puerto "+self.databases.get("MongoDB").get("nodePort")+" con usuario admin y contraseña"+ self.databases.get("MongoDB").get("password")
+
+    def mysql_external(self):
+        return ""
     
     def deploy_database(self, type):
-        self.databases.update({type: True})
+        self.databases.get(type).update({'deployed': True})
+        if type == "MySQL":
+            os.system('kubectl apply -f ./templates/mysql.yaml')
+        else:
+            os.system('kubectl apply -f ./templates/mongodb.yaml')
         """enviar peticion de deploy a la que sea"""
 
     """ targetPort hace referencia al puerto del Pod al que apuntará el servicio"""
-    def create_service(self, name, nodePort, tier, port, targetPort): 
+    def create_service(self, name, deployName, nodePort, tier, port, targetPort): 
         service = ""
         service ="""\n--- \n
 apiVersion: v1
@@ -117,7 +184,7 @@ metadata:
     labels:
         app: """+name+"""
         
-    name: """+name+"""-svc-add
+    name: """+deployName+"""-svc-add
 spec:
     selector:
         app: """+name+"""
@@ -138,15 +205,13 @@ spec:
         
         return service
 
-    def create_deployment(self, tier, name, containerPort, image, database, vHostname, vUser, vPassword):
-        # if self.databases.get(database).get('deployed') == False:
-        #     self.deploy_database(database)
+    def create_deployment(self, tier, name, deployName, containerPort, image, database, vHostname, vUser, vPassword):
         deploy = ""
         deploy = """\n---\n 
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-    name: """+name+"""
+    name: """+deployName+"""
     labels:
         app: """+name+"""
         type: """+tier+"""
@@ -168,7 +233,7 @@ spec:
                   ports:
                   - containerPort: """+containerPort+"""
                     name: """+name+"""-port"""
-        if database !=None:
+        if database != None:
             deploy += """
                   env:
                     - name: """+vHostname+"""
@@ -186,6 +251,11 @@ spec:
                         secretKeyRef:
                             name: """+database.get('secret')+"""
                             key: password"""
+        elif deployName.split('-') == [name,"front"]:
+            deploy += """
+                    env:
+                      - name: """+vHostname+"""
+                        value: """+name+"""-back-svc-add"""
         return deploy
                                 
 

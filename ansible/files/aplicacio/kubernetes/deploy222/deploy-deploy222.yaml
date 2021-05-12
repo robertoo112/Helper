@@ -1,0 +1,109 @@
+
+---
+ 
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: deploy222-front
+    labels:
+        app: deploy222
+        type: front
+spec:
+    replicas: 1
+    selector:
+        matchLabels:
+            app: deploy222
+            type: front
+    template:
+        metadata:
+            labels:
+                app: deploy222
+                type: front
+        spec:
+            containers:
+                - name: deploy222-container
+                  image: trow.kube-public:31000/image2
+                  ports:
+                  - containerPort: puerto-front
+                    name: deploy222-port
+                    env:
+                      - name: hostname-backend
+                        value: deploy222-back-svc-add
+--- 
+
+apiVersion: v1
+kind: Service
+metadata:
+    labels:
+        app: deploy222
+        
+    name: deploy222-front-svc-add
+spec:
+    selector:
+        app: deploy222
+        type: front
+    type: NodePort
+    ports:
+        - port: puerto-front
+          targetPort: puerto-front
+          nodePort: 31331
+---
+ 
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: deploy222-back
+    labels:
+        app: deploy222
+        type: back
+spec:
+    replicas: 1
+    selector:
+        matchLabels:
+            app: deploy222
+            type: back
+    template:
+        metadata:
+            labels:
+                app: deploy222
+                type: back
+        spec:
+            containers:
+                - name: deploy222-container
+                  image: trow.kube-public:31000/image2
+                  ports:
+                  - containerPort: puerto-backend
+                    name: deploy222-port
+                  env:
+                    - name: v1
+                      valueFrom:
+                        configMapKeyRef:
+                            name: mongo-config
+                            key: hostname
+                    - name: v2
+                      valueFrom:
+                        secretKeyRef:
+                            name: mongo-user
+                            key: username
+                    - name: v3
+                      valueFrom:
+                        secretKeyRef:
+                            name: mongo-user
+                            key: password
+--- 
+
+apiVersion: v1
+kind: Service
+metadata:
+    labels:
+        app: deploy222
+        
+    name: deploy222-back-svc-add
+spec:
+    selector:
+        app: deploy222
+        type: back
+    type: ClusterIP
+    ports:
+        - port: puerto-backend
+          targetPort: puerto-backend
