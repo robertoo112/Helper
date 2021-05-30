@@ -1,30 +1,29 @@
 import json
 import os
 import time
-
+import subprocess as sp
 
 class Manage:
     def __init__(self, x):
         self.x = x
         self.OS = {'Ubuntu': 'ubuntu', 'Centos7':'centos', 'Apache': 'httpd', 'Tomcat': 'tomcat'}
         self.unix_commands = {"cp": "ADD","pip": "RUN", "pip3": "RUN", "chmod": "RUN", "apt-get": "RUN",
-        "apt": "RUN", "yum": "RUN", "dnf": "RUN", "python": "CMD", "wget": "RUN", "curl": "RUN", "chown": "RUN",
-        "chgrp":"RUN", "cd": "WORKDIR", "tar": "RUN", "rm": "RUN", "echo": "RUN", "set": "RUN"}
+        "apt": "RUN", "yum": "RUN", "dnf": "RUN", "python": "CMD", "wget": "RUN", "curl": "RUN", "chown": "RUN", "python3" : "CMD",
+        "chgrp":"RUN", "cd": "WORKDIR", "tar": "RUN", "rm": "RUN", "echo": "RUN", "set": "RUN", "httpd": "CMD", "catalina.sh": "CMD", "node": "CMD", "npm" : "run"}
         self.databases = {'MongoDB':{'deployed': False, 'configMap': 'mongo-config', 'secret':'mongo-user', 'external': False, 'nodePort':'30017', 'user': 'admin', 'password': 'admin'},
                           'MySQL' :{'deployed': False, 'configMap': 'mysql-config', 'secret':'mysql-user', 'external': False, 'nodePort':'30036', 'user': 'root', 'password': 'admin'  }}
-        self.servers = ['apache', 'apache-tomcat']
         self.docker_registry = "trow.kube-public:31000/"
         self.deploys = ['asdas','fasdfasd','fasdfa', 'Robert']
-        self.deploy = [{'App': 'nombre','deployments':['deploy1-back','deploy1-front'],'services':['svc-back','svc-front']}]
+        self.deploy = [{'App': 'nombre','deployments':['deploy1-back','deploy1-front'],'services':['svc-back','svc-front'], 'images':['imagen1']}]
         self.services = ['asdas','fasdfasd','fasdfa']
         self.persistentVolumes = []
         self.pvClaims = ['asdas','fasdfasd','fasdfa']
         self.secrets = [] 
         self.configMaps = ['asdas','fasdfasd','fasdfa']
         self.kubernetesObjects = {'services': self.services,'deploys': self.deploys,'persistentVolumes': self.persistentVolumes,'secrets': self.secrets,'configMaps': self.configMaps }
-        self.docker_images = ['iamge1','image2']
+        self.docker_images = []
         self.deploy_options = {'Back-end o Front-end con servicio externo y BBDD', 'Front con servicio externo, enlazado con Back-end con BDD', 'Back-end o Front-end con servicio externo'}
-        self.used_ports = ['31000','32000']
+        self.used_ports = []
 
     def get_image_from_docker_hub(self, image):
         return ""
@@ -35,6 +34,24 @@ class Manage:
     def create_services(self, name, nodePort):
         return""
 
+    def get_dashboard_token(self):
+        # try:
+        #     token = subprocess.check_output('kubectl describe secret admin-user-token -n kubernetes-dashboard | grep token: -A1')
+        # except subprocess.CalledProcessError as err:
+        #     return err
+        token = sp.getoutput('kubectl describe secret admin-user-token -n kubernetes-dashboard | grep token: -A1')
+        return token.split()[1]
+
+    
+    def delete_app(self, index):
+        var = self.deploy.pop(int(index))
+        services = var.get("services")
+        deployments = var.get("deployments")
+        for service in services:
+            os.system("kubectl delete svc "+service)
+        for deployment in deployments:
+            os.system("kubectl delete deployment "+deployment)
+        return "Aplicacion eliminada"
 
     def push_image(self, dockerFile, image_name, url):
         os.mkdir("./dockerfiles/"+image_name)
@@ -42,10 +59,11 @@ class Manage:
         file.write(dockerFile)
         file.close()
         os.system("git clone "+url+" ./dockerfiles/"+image_name+"/gitrepo")
-        time.sleep(4)
-        os.system("docker build ./dockerfiles/"+image_name+"/ -t "+self.docker_registry+image_name)
-        time.sleep(4)
-        os.system("docker push "+self.docker_registry+image_name)
+        time.sleep(1)
+        os.system("sudo docker build ./dockerfiles/"+image_name+"/ -t "+self.docker_registry+image_name)
+        time.sleep(1)
+        register = os.system("sudo docker push "+self.docker_registry+image_name)
+        # print(register)
         self.docker_images.append(image_name)
         return ""
 
@@ -96,7 +114,7 @@ class Manage:
         print(deployType)
         database = self.databases.get(args.get('database'))
         if database != None and self.databases.get(args.get('database')).get('deployed') == False:
-            self.deploy_database(database)
+            self.deploy_database(args.get('database'))
         name = args.get('name')
         if deployType == '1' or deployType == '3': 
             nodePort = args.get('nodePort')
@@ -109,9 +127,9 @@ class Manage:
             vPassword = args.get('password')
             yaml += self.create_deployment(tier, name, name, containerPort, image, database, vHostname, vUser, vPassword)
             yaml += self.create_service(name, name, nodePort, tier, "", containerPort)
-
+            deploy = {'App': name,'deployments':[name],'services':[name+"-svc-add"], 'images' : [image], 'port': nodePort}
             self.deploy_yaml( yaml, name)
-            #self.deploy
+            self.deploy.append(deploy)
             self.used_ports.append(nodePort)
         else:
             """front"""
@@ -133,7 +151,9 @@ class Manage:
             vPassword = args.get('password')
             yaml += self.create_deployment(tier, name, name_back, containerPort_back, image_back, database, vHostname, vUser, vPassword)
             yaml += self.create_service(name, name_back, "", tier, containerPort_back, containerPort_back)
+            deploy = {'App': name,'deployments':[name_back,name_front],'services':[name_back+"-svc-add",name_front+"-svc-add"], 'images' : [image_back, image_front], 'port': nodePort}
             self.deploy_yaml( yaml, name)
+            self.deploy.append(deploy)
             self.used_ports.append(nodePort)
         return ""
     
@@ -162,9 +182,6 @@ class Manage:
         else:
             os.system("kubectl create -f ./templates/nodeport-mongo.yaml")
             return "MongoDB visible en el puerto "+self.databases.get("MongoDB").get("nodePort")+" con usuario admin y contraseña"+ self.databases.get("MongoDB").get("password")
-
-    def mysql_external(self):
-        return ""
     
     def deploy_database(self, type):
         self.databases.get(type).update({'deployed': True})
@@ -173,6 +190,7 @@ class Manage:
         else:
             os.system('kubectl apply -f ./templates/mongodb.yaml')
         """enviar peticion de deploy a la que sea"""
+        time.sleep(5)
 
     """ targetPort hace referencia al puerto del Pod al que apuntará el servicio"""
     def create_service(self, name, deployName, nodePort, tier, port, targetPort): 

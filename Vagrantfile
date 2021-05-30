@@ -39,7 +39,7 @@ Vagrant.configure("2") do |config|
 	     node.vm.provision "ansible" do |ansible|
 	         ansible.limit = "all"
 	         ansible.playbook = "./ansible/site.yaml"
-          #  ansible.tags = "app"
+          #ansible.tags = "app"
           #  ansible.verbose = "vvv"
 		 ansible.host_vars = {
 		    "k8s-master" => {"ansible_ssh_host" => "192.168.50.20", "ansible_port" => "22", "ansible_ssh_pass" => "vagrant"},

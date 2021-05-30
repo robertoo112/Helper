@@ -33,7 +33,7 @@
     path: ./files/docker_registry
   register: app
 
-- name: Copy docker registry
+- name: Copy aplication directory
   copy: 
      src: './files/aplicacio'
      dest: /home/vagrant/flask_app

@@ -13,26 +13,25 @@ app.secret_key = 'mysecretkey'
 def default():
     data = ops.get_kubernetesObejects()
     data2 = ops.docker_images
+    print(ops.deploy)
     print(data)
-    return render_template('index2.html', kubernetesObjects = ops.get_kubernetesObejects() , docker_images = ops.docker_images)
+    return render_template('index2.html', kubernetesObjects = ops.get_kubernetesObejects() , docker_images = ops.docker_images, deploys = ops.deploy)
 
-@app.route("/external/<action>", methods = ["POST"])
+@app.route("/external/<action>")
 def external(action):
     if action == "mongo":
         message = ops.mongo_external()
     else:
         message = ops.mysql_external()
-    flash(message, category='error')        
-    return render_template('index2.html', kubernetesObjects = ops.get_kubernetesObejects() , docker_images = ops.docker_images)
+    flash(message, category='success')        
+    return render_template('index2.html', kubernetesObjects = ops.get_kubernetesObejects() , docker_images = ops.docker_images, deploys = ops.deploy)
 
-@app.route("/do/<action>")
+@app.route("/delete/<action>")
 def do(action):
-    deploys = ops.deploy_options
-    images = ops.docker_images
-    nodePorts = ops.used_ports
-    data = ops.databases
-    return render_template(action+'.html', options = deploys, docker_images = images, ports = nodePorts, databases = ops.databases)
-
+    message = ops.delete_app(action)
+    flash(message, category='success')
+    return render_template('index2.html', kubernetesObjects = ops.get_kubernetesObejects() , docker_images = ops.docker_images, deploys = ops.deploy)
+    
 @app.route("/create_deploy", methods = ["POST", "GET"])
 def create_deploy():
     if request.method == "POST":
@@ -46,7 +45,7 @@ def create_deploy():
         else:
             ops.kubernetes_deploy(form)
             flash("Deploy generado, accesible desde http://master-ip:"+form.get('nodePort'), category='success')
-            return render_template('index2.html', kubernetesObjects = ops.get_kubernetesObejects(), images = ops.docker_images, databases = ops.databases, ports = ops.used_ports)
+            return render_template('index2.html', kubernetesObjects = ops.get_kubernetesObejects(), images = ops.docker_images, databases = ops.databases, ports = ops.used_ports, deploys = ops.deploy)
         
     return render_template('create_deploy.html', kubernetesObjects = ops.get_kubernetesObejects(), docker_images = ops.docker_images, databases = ops.databases, ports = ops.used_ports)
 
@@ -80,9 +79,7 @@ def add_Image():
         if ops.docker_images.count(form.get('nombre')) > 0 or form.get('nombre') == None:
             flash("Nombre de imagen repetido", category='error')
         out = ops.generate_image(form)
-        print("desoues")
-        #return redirect(url_for('app.default'))
-        return""
+        return redirect(url_for('default'))
         #return redirect(url_for('default'))
     return render_template('add_Image.html', kubernetesObjects = ops.get_kubernetesObejects(), images = list(ops.OS.keys()), databases = ops.databases, ports = ops.used_ports)
         
@@ -98,7 +95,12 @@ def rm_app():
 
 @app.route("/kubernetes_dashboard")
 def dashboard():
-    return ""
+    message = "Dashboard en https://192.168.50.20:30008/ \n"
+    message += "Token para el dashboard: \n"
+    token = ops.get_dashboard_token()
+    message += token
+    flash(message, category='succes')
+    return redirect(url_for('default'))
         
 
 #@app.route("/deploy")
@@ -112,4 +114,3 @@ if __name__ == "__main__":
         os.mkdir("./kubernetes")
         
     app.run(host="0.0.0.0", port = 8080, debug = True)
-

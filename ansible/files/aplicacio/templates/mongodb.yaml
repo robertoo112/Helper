@@ -9,6 +9,8 @@ metadata:
 spec:
     ports:
     - port: 27017
+      protocol: TCP
+      targetPort: 27017
     selector:
         app: mongo
     clusterIP: None
@@ -82,12 +84,12 @@ spec:
                 - name: MONGO_INITDB_ROOT_USERNAME
                   valueFrom:
                     secretKeyRef:
-                        name: mongo-username
+                        name: mongo-user
                         key: username
                 - name: MONGO_INITDB_ROOT_PASSWORD
                   valueFrom:
                     secretKeyRef:
-                        name: mongo-username
+                        name: mongo-user
                         key: password
               ports:
               - containerPort: 27017
