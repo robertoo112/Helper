@@ -1,3 +1,4 @@
 ./.vagrant
 ./vag.sh
-./ansible/files/dockker_*
+./ansible/files/docker_images
+./ansible/files/docker_registry
