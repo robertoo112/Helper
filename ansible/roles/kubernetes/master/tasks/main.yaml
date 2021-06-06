@@ -49,5 +49,16 @@
     name: bash-completion
     state: present
 
+- name: Source the completion script in the bashrc
+  lineinfile:
+    line: source <(kubectl completion bash)
+    state: present
+    path: ~/.bashrc
+
+- name: Copy the completion script of kubectl
+  command: kubectl completion bash > ~/kubectl
+  become: false
+
 - name: Enable kubectl autocompletion
-  command: bash -c 'echo "source <(kubectl completion bash)" >> /etc/bashrc'
+  command: mv ~/kubectl /etc/bash_completion.d/
+
