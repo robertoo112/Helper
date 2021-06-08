@@ -39,7 +39,7 @@
 - name: Prepare environment
   hosts: master
   roles:
-    - provisional
+    - setup-registry
   tags:
     - provisional
   
