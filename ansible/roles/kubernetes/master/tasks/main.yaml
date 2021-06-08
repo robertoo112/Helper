@@ -51,8 +51,7 @@
     path: ~/.bashrc
 
 - name: Copy the completion script of kubectl
-  command: kubectl completion bash > ~/kubectl
-  become: false
+  shell: kubectl completion bash > ~/kubectl
 
 - name: Enable kubectl autocompletion
   command: mv ~/kubectl /etc/bash_completion.d/
