@@ -28,11 +28,6 @@
 
 - name: Get kubernetes dashboard modified with node port
   template: 
-    src: 'calico.yaml.j2'
-    dest: calico.yaml
-
-- name: Get kubernetes dashboard modified with node port
-  template: 
     src: 'dashboard.yaml.j2'
     dest: kubernetes-dashboard.yaml
 
