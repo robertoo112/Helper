@@ -1,6 +1,0 @@
-FROM ubuntuimage
-ADD sdfasdfasdf /aquimismo
-RUN apt-get install python
-RUN apt-get install python
-RUN pip install flask
-CMD python /aquimismo

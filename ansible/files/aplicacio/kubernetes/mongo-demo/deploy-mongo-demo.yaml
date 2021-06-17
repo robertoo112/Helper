@@ -4,40 +4,40 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-    name: deploy1
+    name: mongo-demo
     labels:
-        app: deploy1
+        app: mongo-demo
         type: polivalente
 spec:
     replicas: 1
     selector:
         matchLabels:
-            app: deploy1
+            app: mongo-demo
             type: polivalente
     template:
         metadata:
             labels:
-                app: deploy1
+                app: mongo-demo
                 type: polivalente
         spec:
             containers:
-                - name: deploy1-container
-                  image: trow.kube-public:31000/iamge1
+                - name: mongo-demo-container
+                  image: trow.kube-public:31000/mongo-demo
                   ports:
-                  - containerPort: 3333
-                    name: deploy1-port
+                  - containerPort: 8080
+                    name: mongo-demo-port
                   env:
-                    - name: v1
+                    - name: HOSTNAME
                       valueFrom:
                         configMapKeyRef:
                             name: mongo-config
                             key: hostname
-                    - name: v2
+                    - name: USERNAME
                       valueFrom:
                         secretKeyRef:
                             name: mongo-user
                             key: username
-                    - name: v3
+                    - name: PASSWORD
                       valueFrom:
                         secretKeyRef:
                             name: mongo-user
@@ -48,15 +48,15 @@ apiVersion: v1
 kind: Service
 metadata:
     labels:
-        app: deploy1
+        app: mongo-demo
         
-    name: deploy1-svc-add
+    name: mongo-demo-svc-add
 spec:
     selector:
-        app: deploy1
+        app: mongo-demo
         type: polivalente
     type: NodePort
     ports:
-        - port: 3333
-          targetPort: 3333
-          nodePort: 31331
+        - port: 8080
+          targetPort: 8080
+          nodePort: 31111
